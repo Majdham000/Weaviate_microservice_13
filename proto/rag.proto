@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package rag;
+
+service WeaviateService {
+  rpc StorePdfDocument (StorePdfRequest) returns (StoreResponse) {}
+  rpc StoreDocument (StoreRequest) returns (StoreResponse) {}
+  rpc DeleteDocument (DeleteRequest) returns (DeleteResponse) {}
+  rpc FindSimilar (FindRequest) returns (FindResponse) {}
+}
+
+message StorePdfRequest {
+  string file_path = 1;
+}
+
+message StoreRequest {
+  string text = 1;
+  string source = 2;
+}
+
+message StoreResponse {
+  string message = 1;
+}
+
+message DeleteRequest {
+  string document_id = 1;
+}
+
+message DeleteResponse {
+  string message = 1;
+}
+
+message FindRequest {
+  string query = 1;
+  int32 k = 2;
+}
+
+message FindResponse {
+  repeated string results = 1;
+}
