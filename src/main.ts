@@ -14,7 +14,7 @@ async function bootstrap() {
     options: {
       //url: 'localhost:50051',
       package: 'rag',
-      protoPath: join(__dirname, '../proto/rag.proto'),
+      protoPath: '../rag_system/proto/rag.proto',
       loader: {keepCase: true}
     },
   });

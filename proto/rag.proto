@@ -13,9 +13,14 @@ message StorePdfRequest {
   string file_path = 1;
 }
 
+message Document {
+  string id = 1;
+  string text = 2;
+  string source = 3;
+}
+
 message StoreRequest {
-  string text = 1;
-  string source = 2;
+  repeated Document documents = 1;
 }
 
 message StoreResponse {
@@ -23,7 +28,7 @@ message StoreResponse {
 }
 
 message DeleteRequest {
-  string document_id = 1;
+  string documentId = 1;
 }
 
 message DeleteResponse {

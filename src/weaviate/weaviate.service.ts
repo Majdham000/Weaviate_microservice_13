@@ -7,10 +7,13 @@ import weaviate from "weaviate-ts-client";
 import { ApiKey } from "weaviate-ts-client"
 
 import type { Document } from "@langchain/core/documents";
-import { v4 as uuidv4 } from "uuid";
+import { UUIDTypes, v4 as uuidv4 } from "uuid";
 
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+
+import { ConfigService } from '@nestjs/config';
+import { UUID } from 'crypto';
 
 
 @Injectable()
@@ -19,18 +22,18 @@ export class WeaviateService {
     private vectorStore: WeaviateStore;
     private weaviateClient;
 
-    constructor(){
+    constructor(private configService: ConfigService){
         console.log("creating vector database");
         
         this.embeddings = new OpenAIEmbeddings({
-            openAIApiKey: process.env.OPENAI_API_KEY
+            openAIApiKey: this.configService.get<string>('OPENAI_API_KEY')
         });
         
         
         this.weaviateClient = (weaviate as any).client({
             scheme: "https",
-            host: process.env.WCD_URL,
-            apiKey: new ApiKey(process.env.WCD_API_KEY as string),
+            host: this.configService.get<string>('WCD_URL'),
+            apiKey: new ApiKey(this.configService.get<string>('WCD_API_KEY') as string),
         });
         
         this.vectorStore = new WeaviateStore(this.embeddings, {
@@ -42,18 +45,28 @@ export class WeaviateService {
 
     }
 
-    async storeDocument(text: string, source: string) {
-        const document: Document = {
-            pageContent: text,
-            metadata: { source: source },
-            id: uuidv4()
-        };
+    async storeDocument(documents: {id: string; text: string; source: string}[]): Promise<string> {
+        let documentsToStore: Document[] = []
+        let ids: string[] = []
 
-        await this.vectorStore.addDocuments([document], { ids: [document.id ?? uuidv4()] });
+        for (const doc of documents) {
+            const document: Document = {
+                id: doc.id ?? uuidv4(),
+                pageContent: doc.text,
+                metadata: { source: doc.source }
+            };
 
-        console.log(document);
+            documentsToStore.push(document)
+            ids.push(document.id ?? uuidv4())
 
-        return "Document added succesfully.";
+        }
+
+        await this.vectorStore.addDocuments(documentsToStore, { ids: ids });
+
+        // console.log(documentsToStore);
+        // console.log(ids);
+
+        return "Documents added succesfully.";
     }
 
     async storePdfDocument(file_path: string): Promise<string> {
